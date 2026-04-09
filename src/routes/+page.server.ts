@@ -40,6 +40,8 @@ export const actions: Actions = {
       .filter((i) => i.type === "track")
       .map((i) => i.item);
 
+    console.log(`Starting download of ${albumJson.data.title}`);
+
     // Download each track
     Promise.all(
       tracks.map(async (track) => {
@@ -56,6 +58,8 @@ export const actions: Actions = {
           `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`,
           buffer
         );
+
+        console.log(`Downloaded ${track.title}`);
 
         await writeFlacTags(
           {
@@ -81,8 +85,10 @@ export const actions: Actions = {
           },
           `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`
         );
+
+        console.log(`Tagged ${track.title}`);
       })
-    ).then(() => console.log("Done"));
+    ).then(() => console.log(`Done downloading ${albumJson.data.title}`));
 
     return { success: true };
   }
