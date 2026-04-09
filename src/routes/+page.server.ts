@@ -1,4 +1,5 @@
 import type { Actions } from "@sveltejs/kit";
+import { writeFlacTags } from "flac-tagger";
 
 // +page.server.ts
 const HIFI_BASE = process.env.HIFI_BASE!;
@@ -55,8 +56,33 @@ export const actions: Actions = {
           `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`,
           buffer
         );
+
+        await writeFlacTags(
+          {
+            tagMap: {
+              title: track.title,
+              artist: track.artists.map((a) => a.name).join(", "),
+              album: track.album.title,
+              tracknumber: track.trackNumber.toString()
+            },
+            picture: {
+              buffer: Buffer.from(
+                new Uint8Array(
+                  await (
+                    await fetch(
+                      `https://resources.tidal.com/images/${track.album.cover.replaceAll("-", "/")}/500x500.jpg`
+                    )
+                  ).arrayBuffer()
+                )
+              ),
+              mime: "image/jpeg",
+              description: `${track.album.title} cover`
+            }
+          },
+          `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`
+        );
       })
-    );
+    ).then(() => console.log("Done"));
 
     return { success: true };
   }

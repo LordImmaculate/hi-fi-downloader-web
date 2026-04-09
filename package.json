@@ -59,6 +59,7 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"flac-tagger": "^2.0.0",
 		"mode-watcher": "^1.1.0"
 	}
 }
