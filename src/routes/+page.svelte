@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { SearchResults } from "lucida/types";
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
   import { enhance } from "$app/forms";
@@ -7,16 +6,19 @@
   import * as Item from "$lib/components/ui/item";
   import { toast } from "svelte-sonner";
 
-  let { form } = $props<{ form?: FormData }>();
-  let searchResults = $state<Record<string, SearchResults> | null>(null);
+  const { form } = $props<{ form?: FormData }>();
+  let searchResults = $state<TidalAlbumWithArtists[] | null>(null);
 
   $effect(() => {
-    if (form?.results) {
-      searchResults = form.results;
+    if (form?.albums) {
+      searchResults = form.albums;
     }
-    if (form?.message) {
-      if (form.success) toast.success(form.message);
-      else toast.error(form.message);
+    if (form?.promise) {
+      toast.promise(form.promise, {
+        loading: "Downloading...",
+        success: "Download complete!",
+        error: "Download failed."
+      });
     }
   });
 </script>
@@ -28,22 +30,22 @@
   </form>
 
   {#if searchResults}
-    {#each Object.entries(searchResults) as [key, result] (key)}
-      <h2 class="text-2xl font-bold">Search Results</h2>
+    <!-- {#each Object.entries(searchResults) as [key, result] (key)} -->
+    <h2 class="text-2xl font-bold">Search Results</h2>
 
-      <!-- <span class="text-xl font-bold">Tracks</span>
+    <!-- <span class="text-xl font-bold">Tracks</span>
       <Item.Group class="grid grid-flow-col">
         {#each result.tracks as track (track.id)}
           <TrackCard music={track} />
         {/each}</Item.Group
       > -->
 
-      <span class="mb-4 text-xl font-bold">Albums</span>
-      <Item.Group class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
-        {#each result.albums as album (album.id)}
-          <TrackCard music={album} />
-        {/each}</Item.Group
-      >
-    {/each}
+    <span class="mb-4 text-xl font-bold">Albums</span>
+    <Item.Group class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+      {#each searchResults as album (album.id)}
+        <TrackCard {album} />
+      {/each}</Item.Group
+    >
+    <!-- {/each} -->
   {/if}
 </div>

@@ -1,50 +1,63 @@
-import { lucida } from "$lib/lucida";
-import type { Actions } from "./$types";
+import type { Actions } from "@sveltejs/kit";
 
-let queue = Array<string>();
+// +page.server.ts
+const HIFI_BASE = process.env.HIFI_BASE!;
+const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
 
 export const actions: Actions = {
   search: async ({ request }) => {
     const data = await request.formData();
     const query = data.get("query") as string;
-    const results = await lucida.search(query, 100);
-    return { success: true, results };
+    const res = await fetch(
+      `${HIFI_BASE}/search/?s=${encodeURIComponent(query)}`
+    );
+    const json = (await res.json()) as TidalSearchResponse;
+
+    const seen = new Set<number>();
+    const albums = json.data.items
+      .filter((track) => {
+        if (seen.has(track.album.id)) return false;
+        seen.add(track.album.id);
+        return true;
+      })
+      .map((track) => ({
+        ...track.album,
+        artists: track.artists
+      }));
+
+    return { albums };
   },
-  download: async ({
-    request
-  }): Promise<{
-    success: "default" | "success" | "info" | "warning" | "error" | "promise";
-    message: string;
-  }> => {
+
+  download: async ({ request }) => {
     const data = await request.formData();
-    const url = data.get("url") as string;
-    console.log("Download action triggered");
-    const album = await lucida.getByUrl(url);
-    for (const track of album.tracks) {
-      if (!queue.includes(track.url)) {
-        queue.push(track.url);
-      }
-    }
-    processQueue();
-    return {
-      success: "success",
-      message: "Download added to queue"
-    };
+    const id = data.get("id") as string;
+
+    // Fetch album to get all track IDs
+    const albumRes = await fetch(`${HIFI_BASE}/album/?id=${id}`);
+    const albumJson = (await albumRes.json()) as TidalAlbumResponse;
+    const tracks = albumJson.data.items
+      .filter((i) => i.type === "track")
+      .map((i) => i.item);
+
+    // Download each track
+    Promise.all(
+      tracks.map(async (track) => {
+        const res = await fetch(
+          `${HIFI_BASE}/track/?id=${track.id}&quality=HI_RES_LOSSLESS`
+        );
+        const json = (await res.json()) as TidalTrackResponse;
+        const manifest = JSON.parse(atob(json.data.manifest));
+        const audioUrl = manifest.urls[0];
+        const stream = await fetch(audioUrl);
+        const buffer = await stream.arrayBuffer();
+        const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "_")}.flac`;
+        await Bun.write(
+          `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`,
+          buffer
+        );
+      })
+    );
+
+    return { success: true };
   }
 };
-
-function processQueue() {
-  if (queue.length === 0) return;
-  const trackUrl = queue.shift()!;
-  lucida
-    .getByUrl(trackUrl)
-    .then(async (e) => {
-      const streamResponse = await e.getStream();
-      const response = new Response(streamResponse.stream);
-      await Bun.write("./download.flac", response);
-    })
-    .catch((error) => {
-      console.error(`Error downloading ${trackUrl}:`, error);
-    })
-    .finally(() => processQueue());
-}

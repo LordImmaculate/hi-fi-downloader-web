@@ -1,11 +1,10 @@
 <script lang="ts">
-  import type { Album, Track } from "lucida/types";
   import * as Item from "$lib/components/ui/item";
   import { Button } from "$lib/components/ui/button";
   import { enhance } from "$app/forms";
+  import { toast } from "svelte-sonner";
 
-  let { music }: { music: Track | Album } = $props();
-  let artists = music.artists?.map((artist) => artist.name).join(", ");
+  const { album }: { album: TidalAlbumWithArtists } = $props();
 </script>
 
 <!-- <div class="round">
@@ -17,21 +16,37 @@
 
 <Item.Root variant="outline">
   <Item.Header>
-    {#if "coverArtwork" in music && music.coverArtwork && music.coverArtwork.length > 0}
+    {#if album.cover}
       <img
         class="mr-auto ml-auto h-max w-max rounded-md"
-        src={music.coverArtwork[1].url}
-        alt={music.title}
+        src={`https://resources.tidal.com/images/${album.cover.replaceAll("-", "/")}/320x320.jpg`}
+        alt={album.title}
         width="128"
         height="128"
       />
     {/if}
   </Item.Header>
   <Item.Content>
-    <Item.Title>{music.title}</Item.Title>
-    <Item.Description>{artists}</Item.Description>
-    <form method="POST" action="?/download" use:enhance>
-      <input type="hidden" name="url" value={music.url} />
+    <Item.Title>{album.title}</Item.Title>
+    <Item.Description
+      >{album.artists.map((artist) => artist.name).join(", ")}</Item.Description
+    >
+    <form
+      method="POST"
+      action="?/download"
+      use:enhance={() => {
+        const t = toast.loading("Downloading...");
+        return async ({ result, update }) => {
+          await update();
+          if (result.type === "success") {
+            toast.success("Download started!", { id: t });
+          } else {
+            toast.error("Download failed.", { id: t });
+          }
+        };
+      }}
+    >
+      <input type="hidden" name="id" value={album.id} />
       <Button type="submit" variant="outline" size="sm">Download</Button>
     </form>
   </Item.Content>
