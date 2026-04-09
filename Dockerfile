@@ -16,7 +16,9 @@ COPY --from=builder /app/build build/
 COPY --from=builder /app/node_modules node_modules/
 COPY package.json .
 
-RUN mkdir -p downloads
+RUN mkdir -p downloads && chown -R 1000:1000 /app
+
+USER 1000
 
 EXPOSE 3000
 
