@@ -1,10 +1,16 @@
 import type { Actions } from "@sveltejs/kit";
 import { writeFlacTags } from "flac-tagger";
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
-// +page.server.ts
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
+
+export const load: PageServerLoad = (event) => {
+  if (!event.locals.user) return redirect(302, "/auth/signin");
+
+  return { user: event.locals.user };
+};
 
 export const actions: Actions = {
   search: async ({ request }) => {

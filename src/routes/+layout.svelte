@@ -7,6 +7,10 @@
   let { children } = $props();
 </script>
 
+<header>
+  <title>Tidal Ripper</title>
+</header>
+
 <Toaster />
 <ModeWatcher />
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>

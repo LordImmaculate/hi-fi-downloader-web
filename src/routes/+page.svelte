@@ -5,8 +5,10 @@
   import TrackCard from "$lib/components/track-card.svelte";
   import * as Item from "$lib/components/ui/item";
   import { toast } from "svelte-sonner";
+  import Header from "$lib/components/header.svelte";
+  import type { PageServerData } from "./$types";
 
-  const { form } = $props<{ form?: FormData }>();
+  const { form, data } = $props<{ form?: FormData; data?: PageServerData }>();
   let searchResults = $state<TidalAlbumWithArtists[] | null>(null);
 
   $effect(() => {
@@ -23,8 +25,9 @@
   });
 </script>
 
+<Header {data} />
 <div class="mx-20 my-10">
-  <form method="POST" use:enhance action="?/search" class="flex flex-row">
+  <form method="POST" use:enhance action="?/search" class="flex flex-row gap-4">
     <Input type="text" name="query" placeholder="Search..." />
     <Button type="submit">Submit</Button>
   </form>
