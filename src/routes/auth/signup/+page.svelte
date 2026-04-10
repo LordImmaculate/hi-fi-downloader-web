@@ -21,8 +21,15 @@
 <div class="flex h-screen items-center justify-center">
   <div class="flex h-150 w-225 overflow-hidden rounded-2xl shadow-xl">
     <div class="flex w-1/2 flex-col justify-center bg-card px-12">
-      <h1 class="mb-5 text-center text-2xl font-semibold">Welcome Back</h1>
-      <form action="?/signInPassword" use:enhance method="post">
+      <h1 class="mb-5 text-center text-2xl font-semibold">Create Account</h1>
+      <form action="?/signUpPassword" use:enhance method="post">
+        <Input
+          name="name"
+          type="text"
+          placeholder="Name"
+          class="mb-4"
+          required
+        />
         <Input
           name="email"
           type="email"
@@ -45,7 +52,7 @@
           type="submit"
           variant={error ? "destructive" : "default"}
         >
-          Sign In</Button
+          Sign Up</Button
         >
       </form>
     </div>

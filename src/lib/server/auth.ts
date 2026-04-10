@@ -5,7 +5,7 @@ import { env } from "$env/dynamic/private";
 import { getRequestEvent } from "$app/server";
 import { db } from "$lib/server/db";
 
-const disableSignUp = process.env.ENABLE_SIGN_UP !== "true";
+const disableSignUp = process.env.ENABLE_SIGN_UP === "true";
 
 export const auth = betterAuth({
   baseURL: env.ORIGIN,
