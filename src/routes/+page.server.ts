@@ -55,8 +55,6 @@ export const actions: Actions = {
       .filter((i) => i.type === "track")
       .map((i) => i.item);
 
-    const failedTracks: string[] = [];
-
     // Download each track
 
     try {
@@ -65,12 +63,17 @@ export const actions: Actions = {
           const res = await fetch(
             `${HIFI_BASE}/track/?id=${track.id}&quality=HI_RES_LOSSLESS`
           );
-          const json = (await res.json()) as TidalTrackResponse;
+          let json = (await res.json()) as TidalTrackResponse;
+
+          // Handle unsupported manifest types (e.g. DASH)
           if (json.data.manifestMimeType === "application/dash+xml") {
             console.error(`Unsupported manifest type for ${track.title}`);
-            failedTracks.push(track.title);
-            return;
+            const res = await fetch(
+              `${HIFI_BASE}/track/?id=${track.id}&quality=LOSSLESS`
+            );
+            json = (await res.json()) as TidalTrackResponse;
           }
+
           const manifest = JSON.parse(atob(json.data.manifest));
           const audioUrl = manifest.urls[0];
 
