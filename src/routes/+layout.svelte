@@ -8,7 +8,7 @@
 </script>
 
 <header>
-  <title>Tidal Ripper</title>
+  <title>Hi-Fi Downloader</title>
 </header>
 
 <Toaster />

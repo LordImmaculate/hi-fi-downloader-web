@@ -4,15 +4,17 @@
   import Modetoggle from "./modetoggle.svelte";
   import type { PageServerData } from "../../routes/$types";
 
-  const { data }: { data: PageServerData | undefined } = $props();
+  const { data }: { data: PageServerData } = $props();
 </script>
 
 <header class="mx-4 flex items-center gap-4 py-4">
+  <a href={resolve("/")}><h1 class="text-2xl font-bold">Hi-Fi Downloader</h1></a
+  >
   <div class="ml-auto flex items-center gap-4">
     <Modetoggle />
-    {#if data.session?.user}
+    {#if data.user}
       <img
-        src={data.session.user.image ??
+        src={data.user.image ??
           "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.istockphoto.com%2Fvectors%2Favatar-photo-placeholder-icon-design-vector-id1221380217%3Fk%3D20%26m%3D1221380217%26s%3D612x612%26w%3D0%26h%3DavdFJ5PNo-CSkbUZzQ0Xm8h3u5BovGfSNDrfRicPDfY%3D&f=1&nofb=1&ipt=dffb60d699734386f61c6039fde56ffa82e448b0dbcffaa3aff54ab966d00c78"}
         alt="User Avatar"
         class="size-8 rounded-full"

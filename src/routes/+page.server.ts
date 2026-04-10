@@ -2,14 +2,17 @@ import type { Actions } from "@sveltejs/kit";
 import { writeFlacTags } from "flac-tagger";
 import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import type { auth } from "$lib/server/auth";
 
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
 
+type User = typeof auth.$Infer.Session.user;
+
 export const load: PageServerLoad = (event) => {
   if (!event.locals.user) return redirect(302, "/auth/signin");
 
-  return { user: event.locals.user };
+  return { user: event.locals.user as User };
 };
 
 export const actions: Actions = {
