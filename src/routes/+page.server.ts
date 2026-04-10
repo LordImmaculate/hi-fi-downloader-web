@@ -88,7 +88,12 @@ export const actions: Actions = {
 
         console.log(`Tagged ${track.title}`);
       })
-    ).then(() => console.log(`Done downloading ${albumJson.data.title}`));
+    )
+      .then(() => console.log(`Done downloading ${albumJson.data.title}`))
+      .catch((err) => {
+        console.error(`Error downloading ${albumJson.data.title}:`, err);
+        return { success: false, error: "Failed to download album" };
+      });
 
     return { success: true };
   }
