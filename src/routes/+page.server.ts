@@ -1,5 +1,6 @@
 import type { Actions } from "@sveltejs/kit";
 import { writeFlacTags } from "flac-tagger";
+import { error } from "@sveltejs/kit";
 
 // +page.server.ts
 const HIFI_BASE = process.env.HIFI_BASE!;
@@ -92,7 +93,7 @@ export const actions: Actions = {
       .then(() => console.log(`Done downloading ${albumJson.data.title}`))
       .catch((err) => {
         console.error(`Error downloading ${albumJson.data.title}:`, err);
-        return { success: false, error: "Failed to download album" };
+        error(500, "Failed to download album");
       });
 
     return { success: true };
