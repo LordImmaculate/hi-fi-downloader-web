@@ -74,7 +74,7 @@ export const actions: Actions = {
                 new Uint8Array(
                   await (
                     await fetch(
-                      `https://resources.tidal.com/images/${track.album.cover.replaceAll("-", "/")}/500x500.jpg`
+                      `https://resources.tidal.com/images/${albumJson.data.cover.replaceAll("-", "/")}/1280x1280.jpg`
                     )
                   ).arrayBuffer()
                 )
