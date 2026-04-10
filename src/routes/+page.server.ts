@@ -7,6 +7,13 @@ import type { auth } from "$lib/server/auth";
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
 
+const qualities = ["HI_RES_LOSSLESS", "LOSSLESS"];
+const queue = Array<{
+  audioUrl: string;
+  track: TidalTrack;
+  imageUrl: string;
+}>();
+
 type User = typeof auth.$Infer.Session.user;
 
 export const load: PageServerLoad = async (event) => {
@@ -48,61 +55,77 @@ export const actions: Actions = {
       .filter((i) => i.type === "track")
       .map((i) => i.item);
 
-    console.log(`Starting download of ${albumJson.data.title}`);
+    const failedTracks: string[] = [];
 
     // Download each track
-    Promise.all(
-      tracks.map(async (track) => {
-        const res = await fetch(
-          `${HIFI_BASE}/track/?id=${track.id}&quality=HI_RES_LOSSLESS`
-        );
-        const json = (await res.json()) as TidalTrackResponse;
-        const manifest = JSON.parse(atob(json.data.manifest));
-        const audioUrl = manifest.urls[0];
-        const stream = await fetch(audioUrl);
-        const buffer = await stream.arrayBuffer();
-        const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "_")}.flac`;
-        await Bun.write(
-          `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`,
-          buffer
-        );
 
-        console.log(`Downloaded ${track.title}`);
+    try {
+      await Promise.all(
+        tracks.map(async (track) => {
+          const res = await fetch(
+            `${HIFI_BASE}/track/?id=${track.id}&quality=HI_RES_LOSSLESS`
+          );
+          const json = (await res.json()) as TidalTrackResponse;
+          if (json.data.manifestMimeType === "application/dash+xml") {
+            console.error(`Unsupported manifest type for ${track.title}`);
+            failedTracks.push(track.title);
+            return;
+          }
+          const manifest = JSON.parse(atob(json.data.manifest));
+          const audioUrl = manifest.urls[0];
 
-        await writeFlacTags(
-          {
-            tagMap: {
-              title: track.title,
-              artist: track.artists.map((a) => a.name).join(", "),
-              album: track.album.title,
-              tracknumber: track.trackNumber.toString()
-            },
-            picture: {
-              buffer: Buffer.from(
-                new Uint8Array(
-                  await (
-                    await fetch(
-                      `https://resources.tidal.com/images/${albumJson.data.cover.replaceAll("-", "/")}/1280x1280.jpg`
-                    )
-                  ).arrayBuffer()
-                )
-              ),
-              mime: "image/jpeg",
-              description: `${track.album.title} cover`
-            }
-          },
-          `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`
-        );
+          queue.push({
+            audioUrl,
+            track,
+            imageUrl: `https://resources.tidal.com/images/${albumJson.data.cover.replaceAll("-", "/")}/1280x1280.jpg`
+          });
+        })
+      );
+    } catch (err) {
+      console.error(`Error downloading ${albumJson.data.title}:`, err);
+      error(500, "Failed to download album");
+    }
 
-        console.log(`Tagged ${track.title}`);
-      })
-    )
-      .then(() => console.log(`Done downloading ${albumJson.data.title}`))
-      .catch((err) => {
-        console.error(`Error downloading ${albumJson.data.title}:`, err);
-        error(500, "Failed to download album");
-      });
+    await processQueue();
 
     return { success: true };
   }
 };
+
+async function processQueue() {
+  if (queue.length === 0) return;
+  const { audioUrl, track, imageUrl } = queue.shift()!;
+  const stream = await fetch(audioUrl);
+  const buffer = await stream.arrayBuffer();
+  const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "_")}.flac`;
+  await Bun.write(
+    `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`,
+    buffer
+  );
+
+  console.log(`Downloaded ${track.title}`);
+
+  await writeFlacTags(
+    {
+      tagMap: {
+        title: track.title,
+        artist: track.artists.map((a) => a.name).join(", "),
+        album: track.album.title,
+        tracknumber: track.trackNumber.toString()
+      },
+      picture: {
+        buffer: Buffer.from(
+          new Uint8Array(await (await fetch(imageUrl)).arrayBuffer())
+        ),
+        mime: "image/jpeg",
+        description: `${track.album.title} cover`
+      }
+    },
+    `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`
+  );
+
+  console.log(`Tagged ${track.title}`);
+
+  if (queue.length > 0) await processQueue();
+  else console.log("All downloads complete");
+}
