@@ -9,36 +9,34 @@ const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
 
 type User = typeof auth.$Infer.Session.user;
 
-export const load: PageServerLoad = (event) => {
+export const load: PageServerLoad = async (event) => {
   if (!event.locals.user) return redirect(302, "/auth/signin");
 
-  return { user: event.locals.user as User };
+  const query = event.url.searchParams.get("query");
+
+  if (!query) return { user: event.locals.user as User, albums: null };
+
+  const res = await fetch(
+    `${HIFI_BASE}/search/?s=${encodeURIComponent(query)}`
+  );
+  const json = (await res.json()) as TidalSearchResponse;
+
+  const seen = new Set<number>();
+  const albums = json.data.items
+    .filter((track) => {
+      if (seen.has(track.album.id)) return false;
+      seen.add(track.album.id);
+      return true;
+    })
+    .map((track) => ({
+      ...track.album,
+      artists: track.artists
+    }));
+
+  return { user: event.locals.user as User, albums };
 };
 
 export const actions: Actions = {
-  search: async ({ request }) => {
-    const data = await request.formData();
-    const query = data.get("query") as string;
-    const res = await fetch(
-      `${HIFI_BASE}/search/?s=${encodeURIComponent(query)}`
-    );
-    const json = (await res.json()) as TidalSearchResponse;
-
-    const seen = new Set<number>();
-    const albums = json.data.items
-      .filter((track) => {
-        if (seen.has(track.album.id)) return false;
-        seen.add(track.album.id);
-        return true;
-      })
-      .map((track) => ({
-        ...track.album,
-        artists: track.artists
-      }));
-
-    return { albums };
-  },
-
   download: async ({ request }) => {
     const data = await request.formData();
     const id = data.get("id") as string;
