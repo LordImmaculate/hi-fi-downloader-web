@@ -7,7 +7,6 @@ import type { auth } from "$lib/server/auth";
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
 
-const qualities = ["HI_RES_LOSSLESS", "LOSSLESS"];
 const queue = Array<{
   audioUrl: string;
   track: TidalTrack;

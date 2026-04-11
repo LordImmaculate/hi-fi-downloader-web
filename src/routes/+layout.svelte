@@ -4,7 +4,7 @@
   import { ModeWatcher } from "mode-watcher";
   import { Toaster } from "$lib/components/ui/sonner";
 
-  let { children } = $props();
+  const { children } = $props();
 </script>
 
 <header>
