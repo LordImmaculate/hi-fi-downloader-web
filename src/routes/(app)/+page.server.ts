@@ -2,6 +2,8 @@ import type { Actions } from "@sveltejs/kit";
 import { writeFlacTags } from "flac-tagger";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad, PageServerLoadEvent } from "./$types";
+import { downloadError } from "$lib/server/db/schema";
+import { db } from "$lib/server/db";
 
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
@@ -61,7 +63,9 @@ export const actions: Actions = {
 
           // Handle unsupported manifest types (e.g. DASH)
           if (json.data.manifestMimeType === "application/dash+xml") {
-            console.error(`Unsupported manifest type for ${track.title}`);
+            console.error(
+              `Unsupported manifest type for ${track.title}, falling back to LOSSLESS`
+            );
             const res = await fetch(
               `${HIFI_BASE}/track/?id=${track.id}&quality=LOSSLESS`
             );
@@ -80,6 +84,11 @@ export const actions: Actions = {
       );
     } catch (err) {
       console.error(`Error downloading ${albumJson.data.title}:`, err);
+      db.insert(downloadError).values({
+        title: "Failed to download album",
+        message: `Failed to download ${albumJson.data.title}: ${err instanceof Error ? err.message : String(err)}`,
+        timestamp: Date.now()
+      });
       error(500, "Failed to download album");
     }
 

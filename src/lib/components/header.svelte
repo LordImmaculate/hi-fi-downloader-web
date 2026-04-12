@@ -2,15 +2,25 @@
   import { resolve } from "$app/paths";
   import { buttonVariants } from "./ui/button";
   import Modetoggle from "./modetoggle.svelte";
-  import type { PageServerData } from "../../routes/$types";
+  import type { User } from "better-auth";
 
-  const { data }: { data: PageServerData } = $props();
+  type Data = {
+    user: User | null;
+    errors: number;
+  };
+
+  const { data }: { data: Data } = $props();
 </script>
 
 <header class="mx-4 flex items-center gap-4 py-4">
   <a href={resolve("/")}><h1 class="text-2xl font-bold">Hi-Fi Downloader</h1></a
   >
   <div class="ml-auto flex items-center gap-4">
+    {#if data.errors > 0}
+      <a class="text-destructive hover:underline" href={resolve("/errors")}
+        >Errors: {data.errors}</a
+      >
+    {/if}
     <Modetoggle />
     {#if data.user}
       <img
