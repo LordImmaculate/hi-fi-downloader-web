@@ -103,11 +103,15 @@ async function processQueue() {
   const { audioUrl, track, imageUrl } = queue.shift()!;
   const stream = await fetch(audioUrl);
   const buffer = await stream.arrayBuffer();
+
+  // Create multiple directories if needed (e.g. for multi-disk albums)
+  const diskFolder =
+    track.volumeNumber > 1
+      ? `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/Disk ${track.volumeNumber}`
+      : `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}`;
+
   const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "_")}.flac`;
-  await Bun.write(
-    `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`,
-    buffer
-  );
+  await Bun.write(`${diskFolder}/${filename}`, buffer);
 
   console.log(`Downloaded ${track.title}`);
 
@@ -127,7 +131,7 @@ async function processQueue() {
         description: `${track.album.title} cover`
       }
     },
-    `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/${filename}`
+    `${diskFolder}/${filename}`
   );
 
   console.log(`Tagged ${track.title}`);
