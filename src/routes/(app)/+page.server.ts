@@ -105,11 +105,7 @@ async function processQueue() {
   const buffer = await stream.arrayBuffer();
 
   // Create multiple directories if needed (e.g. for multi-disk albums)
-  const diskFolder =
-    `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/Disk ${track.volumeNumber}`.replace(
-      /[/\\:*?"<>|]/g,
-      "-"
-    );
+  const diskFolder = `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/Disk ${track.volumeNumber}`;
 
   const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "-")}.flac`;
   await Bun.write(`${diskFolder}/${filename}`, buffer);
