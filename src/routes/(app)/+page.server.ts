@@ -1,8 +1,7 @@
 import type { Actions } from "@sveltejs/kit";
 import { writeFlacTags } from "flac-tagger";
-import { error, redirect } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
-import type { User } from "better-auth";
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad, PageServerLoadEvent } from "./$types";
 
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
@@ -13,12 +12,10 @@ const queue = Array<{
   imageUrl: string;
 }>();
 
-export const load: PageServerLoad = async (event) => {
-  if (!event.locals.user) return redirect(302, "/auth/signin");
-
+export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
   const query = event.url.searchParams.get("query");
 
-  if (!query) return { user: event.locals.user as User, albums: null };
+  if (!query) return { albums: null };
 
   const res = await fetch(
     `${HIFI_BASE}/search/?s=${encodeURIComponent(query)}`
@@ -37,7 +34,7 @@ export const load: PageServerLoad = async (event) => {
       artists: track.artists
     }));
 
-  return { user: event.locals.user as User, albums };
+  return { albums };
 };
 
 export const actions: Actions = {

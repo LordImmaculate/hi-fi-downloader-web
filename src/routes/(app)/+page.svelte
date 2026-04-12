@@ -4,7 +4,6 @@
   import TrackCard from "$lib/components/track-card.svelte";
   import * as Item from "$lib/components/ui/item";
   import { toast } from "svelte-sonner";
-  import Header from "$lib/components/header.svelte";
   import type { PageServerData } from "./$types";
   import { page } from "$app/state";
 
@@ -23,7 +22,6 @@
   });
 </script>
 
-<Header {data} />
 <div class="mx-20 my-10">
   <form method="get" class="mb-2 flex flex-row gap-4">
     <Input
