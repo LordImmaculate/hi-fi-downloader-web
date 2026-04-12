@@ -106,11 +106,12 @@ async function processQueue() {
 
   // Create multiple directories if needed (e.g. for multi-disk albums)
   const diskFolder =
-    track.volumeNumber > 1
-      ? `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/Disk ${track.volumeNumber}`
-      : `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}`;
+    `${DOWNLOAD_DIR}/${track.artist.name}/${track.album.title}/Disk ${track.volumeNumber}`.replace(
+      /[/\\:*?"<>|]/g,
+      "-"
+    );
 
-  const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "_")}.flac`;
+  const filename = `${track.trackNumber} - ${track.title.replace(/[/\\:*?"<>|]/g, "-")}.flac`;
   await Bun.write(`${diskFolder}/${filename}`, buffer);
 
   console.log(`Downloaded ${track.title}`);
@@ -121,7 +122,8 @@ async function processQueue() {
         title: track.title,
         artist: track.artists.map((a) => a.name).join(", "),
         album: track.album.title,
-        tracknumber: track.trackNumber.toString()
+        tracknumber: track.trackNumber.toString(),
+        discnumber: track.volumeNumber.toString()
       },
       picture: {
         buffer: Buffer.from(
