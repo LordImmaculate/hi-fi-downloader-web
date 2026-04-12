@@ -5,9 +5,6 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
-ARG DATABASE_URL=build_placeholder
-ENV DATABASE_URL=$DATABASE_URL
-
 COPY . .
 RUN bun run build
 
@@ -16,10 +13,13 @@ FROM oven/bun:alpine
 WORKDIR /app
 
 COPY --from=builder /app/build build/
-COPY --from=builder /app/node_modules node_modules/
 COPY package.json .
 
-RUN mkdir -p downloads build && chown 1000:1000 downloads build && chmod 777 downloads build
+RUN bun install --production --frozen-lockfile
+
+RUN mkdir -p downloads build && chown 1000:1000 downloads build && chmod 755 downloads build
+
+ENV NODE_ENV=production
 
 USER 1000
 

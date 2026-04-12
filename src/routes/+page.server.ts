@@ -2,7 +2,7 @@ import type { Actions } from "@sveltejs/kit";
 import { writeFlacTags } from "flac-tagger";
 import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import type { auth } from "$lib/server/auth";
+import type { User } from "better-auth";
 
 const HIFI_BASE = process.env.HIFI_BASE!;
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR!;
@@ -12,8 +12,6 @@ const queue = Array<{
   track: TidalTrack;
   imageUrl: string;
 }>();
-
-type User = typeof auth.$Infer.Session.user;
 
 export const load: PageServerLoad = async (event) => {
   if (!event.locals.user) return redirect(302, "/auth/signin");

@@ -1,4 +1,4 @@
-import { redirect, fail } from "@sveltejs/kit";
+import { redirect, fail, isRedirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { auth } from "$lib/server/auth";
 
@@ -17,11 +17,9 @@ export const actions: Actions = {
         body: { email, password }
       });
 
-      if (result.user) {
-        return redirect(302, "/");
-      }
+      if (result.user) return redirect(302, "/");
     } catch (e) {
-      console.log(e);
+      if (isRedirect(e)) throw e;
       if (e instanceof Error && e.message.includes("Invalid email or password"))
         return fail(400, { message: e.message });
 

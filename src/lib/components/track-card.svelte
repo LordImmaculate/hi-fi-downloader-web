@@ -3,6 +3,7 @@
   import { Button } from "$lib/components/ui/button";
   import { enhance } from "$app/forms";
   import { toast } from "svelte-sonner";
+  import { resolve } from "$app/paths";
 
   const { album }: { album: TidalAlbumWithArtists } = $props();
 </script>
@@ -27,7 +28,9 @@
     {/if}
   </Item.Header>
   <Item.Content>
-    <Item.Title>{album.title}</Item.Title>
+    <Item.Title
+      ><a href={resolve(`/album/${album.id}`)}>{album.title}</a></Item.Title
+    >
     <Item.Description
       >{album.artists.map((artist) => artist.name).join(", ")}</Item.Description
     >
