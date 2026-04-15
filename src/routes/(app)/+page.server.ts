@@ -84,10 +84,10 @@ export const actions: Actions = {
       );
     } catch (err) {
       console.error(`Error downloading ${albumJson.data.title}:`, err);
-      db.insert(downloadError).values({
+      await db.insert(downloadError).values({
         title: "Failed to download album",
         message: `Failed to download ${albumJson.data.title}: ${err instanceof Error ? err.message : String(err)}`,
-        timestamp: Date.now()
+        timestamp: new Date()
       });
       error(500, "Failed to download album");
     }

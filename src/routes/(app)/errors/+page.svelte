@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Button } from "$lib/components/ui/button";
   import * as Table from "$lib/components/ui/table/index.js";
   import type { PageData } from "./$types";
 
@@ -18,11 +19,22 @@
     <Table.Body>
       {#each data.errors as error (error.id)}
         <Table.Row>
-          <Table.Cell class="font-medium">{error.title}</Table.Cell>
+          <Table.Cell class="font-medium">
+            {error.title}</Table.Cell
+          >
           <Table.Cell>{error.message}</Table.Cell>
           <Table.Cell class="text-end"
-            >{new Date(error.timestamp).toLocaleString()}</Table.Cell
-          >
+            >{new Date(error.timestamp).toLocaleString()}
+            <form method="post" class="ml-4 inline">
+              <input type="hidden" name="id" value={error.id} />
+              <Button
+                size="icon-sm"
+                variant="destructive"
+                type="submit"
+                value="remove">×</Button
+              >
+            </form>
+          </Table.Cell>
         </Table.Row>
       {/each}
     </Table.Body>
